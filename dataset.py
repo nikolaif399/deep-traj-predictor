@@ -25,9 +25,9 @@ class TrajDataset(Dataset):
 
   def __getitem__(self, idx):
     if self.mode is 'train':
-      return self.data[idx,:], self.data[idx+1,:]
+      return self.data[idx,:], self.data[idx,:]
     elif self.mode is 'test':
-      return self.data[idx,:], self.data[idx+1,:]
+      return self.data[idx,0], self.data[idx,:]
   
   def __len__(self):
     return self.data.shape[0]-1
