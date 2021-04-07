@@ -1,3 +1,3 @@
-# deep-traj-predictor
+# deep-traj-prediction
 
-Datasets are stored as compressed numpy arrays of size (num_runs,traj_length,num_states+num_sensors).
+Implementation of pedestrian trajectory estimation using LSTM

@@ -2,32 +2,49 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import os
+import pickle
+from matplotlib import pyplot as plt
 
+class PedestrianDataset(Dataset):
+  def __init__(self, data_path, mode='train'):
+    
+    with open(data_path,'rb') as f:
+      data = pickle.load(f)
+    
+    num_data_files = len(data)
+    print(type(data))
+    print(len(data))
+    print(type(data[0]))
+    print(data[0].shape)
 
-class TrajDataset(Dataset):
-  def __init__(self, num_points=16, data_dir='traj_data/', data_session='data', mode='train'):
-    data_fn = os.path.join(data_dir + data_session + '.npz')
-    data = np.load(data_fn)['data']
+    pedestrian_tracks = [dict() for i in range(num_data_files)] # list of dicts, index by file, then by ped index
+
+    for i in range(num_data_files):
+      traj = data[i]
+      total_steps = traj.shape[1]
+      
+      last_ped_id = -1
+      #for j in range(total_steps):
+        #cur_ped_id = traj[1,j]
+        #print(cur_ped_id)
+      plt.plot(traj[2,:])
+      plt.show()
+      print(total_steps)
+      
 
     num_data = data.shape[0]
-
     np.random.seed(0)
 
     # split the dataset into training and test 
-    test_idx = np.random.choice(num_data, num_data//5, replace=False).tolist()
-    train_idx = list(set(range(num_data)) - set(test_idx))
 
-    self.mode = mode
-    if mode is 'train':
-      self.data = data[train_idx,:].astype(np.float32)
-    elif mode is 'test':
-      self.data = data[test_idx,:].astype(np.float32)
+    # NOT IMPLEMENTED YET! USING ALL DATA FOR TRAINING!
 
   def __getitem__(self, idx):
     if self.mode is 'train':
       return self.data[idx,:], self.data[idx,:]
     elif self.mode is 'test':
-      return self.data[idx,0], self.data[idx,:]
+      raise NotImplementedError
+      #return self.data[idx,0], self.data[idx,:]
   
   def __len__(self):
     return self.data.shape[0]-1

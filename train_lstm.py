@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from dataset import TrajDataset
+from dataset import PedestrianDataset
 from lstm import TrajLSTM
 
 def main():
@@ -20,9 +20,9 @@ def main():
   torch.manual_seed(0)
 
   # define dataset and dataloader
-  datasession = 'data_2021-04-06_17:25:49_r1000_n100'
-  train_dataset = TrajDataset(mode='train',data_session=datasession)
-  test_dataset = TrajDataset(mode='test',data_session=datasession)
+  datapath = "data/dataset.pkl"
+  train_dataset = PedestrianDataset(mode='train',data_path=datapath)
+  test_dataset = PedestrianDataset(mode='test',data_path=datapath)
   train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True, num_workers=12)
   test_loader = DataLoader(dataset=test_dataset, batch_size=64, shuffle=False, num_workers=12)
 
