@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from dataset import PedestrianDataset, collate_fn_pad, PadSequence
+from dataset import PedestrianDataset, PadSequence
 from lstm import TrajLSTM
 
 def main():

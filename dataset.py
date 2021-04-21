@@ -23,14 +23,6 @@ class PadSequence:
     
     return sequences_padded, lengths, labels_padded
 
-def collate_fn_pad(list_pairs_seq_target):
-  seqs = [seq for seq, target in list_pairs_seq_target]
-  targets = [target for seq, target in list_pairs_seq_target]
-  seqs_padded_batched = pad_sequence(seqs)   # will pad at beginning of sequences
-  targets_batched = torch.stack(targets)
-  assert seqs_padded_batched.shape[1] == len(targets_batched)
-  return seqs_padded_batched, targets_batched
-
 class PedestrianDataset(Dataset):
   def __init__(self, data_path, mode='train'):
     self.mode = mode
