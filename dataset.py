@@ -1,51 +1,60 @@
-import numpy as np
 import torch
 from torch.utils.data import Dataset
-import os
-import pickle
+from torch.nn.utils.rnn import pad_sequence
 from matplotlib import pyplot as plt
+from toolkit.loaders.loader_eth import load_eth
+import numpy as np
+
+class PadSequence:
+  def __call__(self, batch):
+    # Let's assume that each element in "batch" is a tuple (data, label).
+    sorted_batch = sorted(batch, key=lambda x: x[0].shape[0], reverse=True)
+    
+    # Get each sequence and pad it
+    sequences = [x[0] for x in sorted_batch]
+    sequences_padded = pad_sequence(sequences, batch_first=True)
+      
+    # Also need to store the length of each sequence
+    # This is later needed in order to unpad the sequences
+    lengths = torch.Tensor([len(x) for x in sequences])
+
+    labels = list(map(lambda x: x[1], sorted_batch))
+    labels_padded = pad_sequence(labels, batch_first=True)
+    
+    return sequences_padded, lengths, labels_padded
+
+def collate_fn_pad(list_pairs_seq_target):
+  seqs = [seq for seq, target in list_pairs_seq_target]
+  targets = [target for seq, target in list_pairs_seq_target]
+  seqs_padded_batched = pad_sequence(seqs)   # will pad at beginning of sequences
+  targets_batched = torch.stack(targets)
+  assert seqs_padded_batched.shape[1] == len(targets_batched)
+  return seqs_padded_batched, targets_batched
 
 class PedestrianDataset(Dataset):
   def __init__(self, data_path, mode='train'):
+    self.mode = mode
     
-    with open(data_path,'rb') as f:
-      data = pickle.load(f)
-    
-    num_data_files = len(data)
-    print(type(data))
-    print(len(data))
-    print(type(data[0]))
-    print(data[0].shape)
+    # Load dataset using ETH loader
+    traj_dataset = load_eth(data_path)
+    self.trajs = traj_dataset.get_trajectories().head()
+    self.agent_ids = list(set(self.trajs['agent_id']))
 
-    pedestrian_tracks = [dict() for i in range(num_data_files)] # list of dicts, index by file, then by ped index
-
-    for i in range(num_data_files):
-      traj = data[i]
-      total_steps = traj.shape[1]
-      
-      last_ped_id = -1
-      #for j in range(total_steps):
-        #cur_ped_id = traj[1,j]
-        #print(cur_ped_id)
-      plt.plot(traj[2,:])
-      plt.show()
-      print(total_steps)
-      
-
-    num_data = data.shape[0]
-    np.random.seed(0)
-
-    # split the dataset into training and test 
-
-    # NOT IMPLEMENTED YET! USING ALL DATA FOR TRAINING!
+    # NOTE: Test mode not implemented yet, using all data for training
 
   def __getitem__(self, idx):
     if self.mode is 'train':
-      return self.data[idx,:], self.data[idx,:]
+      segment = self.trajs.loc[self.trajs['agent_id'] == self.agent_ids[idx]]
+      xs = np.array(segment['pos_x']).reshape(-1,1)
+      ys = np.array(segment['pos_y']).reshape(-1,1)
+      vxs = np.array(segment['vel_x']).reshape(-1,1)
+      vys = np.array(segment['vel_y']).reshape(-1,1)
+      seq = torch.tensor(np.hstack((xs,ys,vxs,vys)))
+      # Split into input and label
+      return seq[:-1,:], seq[1:,:]
+    
     elif self.mode is 'test':
       raise NotImplementedError
-      #return self.data[idx,0], self.data[idx,:]
   
   def __len__(self):
-    return self.data.shape[0]-1
-
+    return len(self.agent_ids)

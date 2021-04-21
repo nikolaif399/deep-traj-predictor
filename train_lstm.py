@@ -7,12 +7,13 @@ from torch.utils.data import DataLoader
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from dataset import PedestrianDataset
+from dataset import PedestrianDataset, collate_fn_pad, PadSequence
 from lstm import TrajLSTM
 
 def main():
   # check if cuda available
   device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+  device = 'cpu'
   print("Using device %s" % device)
 
   # set random seed to 0
@@ -20,13 +21,13 @@ def main():
   torch.manual_seed(0)
 
   # define dataset and dataloader
-  datapath = "data/dataset.pkl"
+  datapath = "ETH/seq_hotel/obsmat.txt"
   train_dataset = PedestrianDataset(mode='train',data_path=datapath)
-  test_dataset = PedestrianDataset(mode='test',data_path=datapath)
-  train_loader = DataLoader(dataset=train_dataset, batch_size=64, shuffle=True, num_workers=12)
-  test_loader = DataLoader(dataset=test_dataset, batch_size=64, shuffle=False, num_workers=12)
+  #test_dataset = PedestrianDataset(mode='test',data_path=datapath)
+  train_loader = DataLoader(dataset=train_dataset, batch_size=16, shuffle=True, collate_fn=PadSequence(), num_workers=12)
+  #test_loader = DataLoader(dataset=test_dataset, batch_size=16, shuffle=False, num_workers=12)
 
-  train = False
+  train = True
 
   # define your LSTM loss function here
   loss_func = nn.MSELoss()
@@ -35,7 +36,7 @@ def main():
     # hyper-parameters
     num_epochs = 200
     lr = 0.001
-    input_size = 7 # x, y, z, dx, dy, dz, sensor distance
+    input_size = 4 # x, y, dx, dy
     hidden_size = 128
     num_layers = 2
     dropout = 0.0
@@ -53,9 +54,13 @@ def main():
 
     train_losses = []
     for epoch in range(num_epochs):
-      for n_batch, (in_batch, label) in enumerate(train_loader):
-          
-        in_batch, label = in_batch.to(device), label.to(device)
+      for n_batch, (in_batch, in_batch_len, label) in enumerate(train_loader):
+        
+        print(in_batch.shape)
+        print(in_batch_len.shape)
+        print(label.shape)
+        
+        in_batch, in_batch_len, label = in_batch.to(device), in_batch_len.to(device),label.to(device)
 
         # train LSTM
         out = model(in_batch)
