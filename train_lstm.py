@@ -20,7 +20,9 @@ def main():
   torch.manual_seed(0)
 
   # define dataset and dataloader
-  datapath = "ETH/seq_hotel/obsmat.txt"
+  #datapath = "ETH/seq_hotel/obsmat.txt"
+  datapath = "ETH/seq_eth/obsmat.txt"
+  
   train_test_split = 0.8
   train_dataset = PedestrianDataset(mode='train',train_test_split=train_test_split,data_path=datapath)
   test_dataset = PedestrianDataset(mode='test',train_test_split=train_test_split,data_path=datapath)
