@@ -4,6 +4,7 @@ from torch.nn.utils.rnn import pad_sequence
 from matplotlib import pyplot as plt
 from toolkit.loaders.loader_eth import load_eth
 import numpy as np
+import math
 
 class PadSequence:
   def __call__(self, batch):
@@ -24,29 +25,39 @@ class PadSequence:
     return sequences_padded, lengths, labels_padded
 
 class PedestrianDataset(Dataset):
-  def __init__(self, data_path, mode='train'):
+  def __init__(self, data_path, train_test_split=0.8,mode='train'):
     self.mode = mode
     
     # Load dataset using ETH loader
     traj_dataset = load_eth(data_path)
     self.trajs = traj_dataset.get_trajectories().head()
-    self.agent_ids = list(set(self.trajs['agent_id']))
+    
+    agent_ids_total = set(self.trajs['agent_id'])
+    all_agent_ids = np.array(list(agent_ids_total))
+    
+    np.random.shuffle(all_agent_ids)
+    last_train_idx = math.floor(train_test_split*all_agent_ids.size)
 
-    # NOTE: Test mode not implemented yet, using all data for training
+    if (mode == 'train'):
+      self.agent_ids = all_agent_ids[:last_train_idx]
+    elif (mode == 'test'):
+      self.agent_ids = all_agent_ids[last_train_idx:]
+    else:
+      raise Exception("Dataset mode {} not recognized!".format(mode))
+    
+    print("Loaded {} sequences for mode {}".format(self.agent_ids.size, mode))
 
   def __getitem__(self, idx):
-    if self.mode is 'train':
-      segment = self.trajs.loc[self.trajs['agent_id'] == self.agent_ids[idx]]
-      xs = np.array(segment['pos_x']).reshape(-1,1)
-      ys = np.array(segment['pos_y']).reshape(-1,1)
-      vxs = np.array(segment['vel_x']).reshape(-1,1)
-      vys = np.array(segment['vel_y']).reshape(-1,1)
-      seq = torch.tensor(np.hstack((xs,ys,vxs,vys)))
-      # Split into input and label
-      return seq[:-1,:], seq[1:,:]
-    
-    elif self.mode is 'test':
-      raise NotImplementedError
+    segment = self.trajs.loc[self.trajs['agent_id'] == self.agent_ids[idx]]
+    xs = np.array(segment['pos_x']).reshape(-1,1)
+    ys = np.array(segment['pos_y']).reshape(-1,1)
+    vxs = np.array(segment['vel_x']).reshape(-1,1)
+    vys = np.array(segment['vel_y']).reshape(-1,1)
+    seq = torch.tensor(np.hstack((xs,ys,vxs,vys))).float()
+      
+    # Split into input and label
+    return seq[:-1,:], seq[1:,:]
+
   
   def __len__(self):
-    return len(self.agent_ids)
+    return self.agent_ids.size
