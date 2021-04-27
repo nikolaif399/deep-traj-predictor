@@ -27,13 +27,13 @@ def main():
   train_dataset = PedestrianDataset(mode='train',train_test_split=train_test_split,data_path=datapath)
   test_dataset = PedestrianDataset(mode='test',train_test_split=train_test_split,data_path=datapath)
   train_loader = DataLoader(dataset=train_dataset, batch_size=16, shuffle=True, collate_fn=PadSequence(), num_workers=12)
-  test_loader = DataLoader(dataset=test_dataset, batch_size=16, shuffle=False, num_workers=12)
+  test_loader = DataLoader(dataset=test_dataset, batch_size=16, shuffle=False, collate_fn=PadSequence(), num_workers=12)
 
   # define your LSTM loss function here
   loss_func = nn.MSELoss()
 
   # hyper-parameters
-  num_epochs = 20
+  num_epochs = 3
   lr = 0.001
   input_size = 4 # x, y, dx, dy
   hidden_size = 128
@@ -85,8 +85,14 @@ def main():
   with torch.no_grad():
     for n_batch, (in_batch, in_batch_len, label) in enumerate(test_loader):
       in_batch, in_batch_len, label = in_batch.to(device), in_batch_len.to(device), label.to(device)
+      
+      print("Testing")
+      print("   Size of input batch: ", in_batch.shape)
+      print("   Size of original lengths: ", in_batch_len.shape)
+      print("   Size of labels: ", label.shape)
 
-      pred = model.test(in_batch, future=99)
+      # This will break here as I haven't modified the LSTM model
+      pred = model.test(in_batch)
 
       l1_err += l1_loss(pred, label).item()
       l2_err += l2_loss(pred, label).item()

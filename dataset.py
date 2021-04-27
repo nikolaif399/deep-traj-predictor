@@ -38,14 +38,16 @@ class PedestrianDataset(Dataset):
     np.random.shuffle(all_agent_ids)
     last_train_idx = math.floor(train_test_split*all_agent_ids.size)
 
-    if (mode == 'train'):
+    self.mode = mode
+    
+    if (self.mode == 'train'):
       self.agent_ids = all_agent_ids[:last_train_idx]
-    elif (mode == 'test'):
+    elif (self.mode == 'test'):
       self.agent_ids = all_agent_ids[last_train_idx:]
     else:
-      raise Exception("Dataset mode {} not recognized!".format(mode))
+      raise Exception("Dataset mode {} not recognized!".format(self.mode))
     
-    print("Loaded {} sequences for mode {}".format(self.agent_ids.size, mode))
+    print("Loaded {} sequences for mode {}".format(self.agent_ids.size, self.mode))
 
   def __getitem__(self, idx):
     segment = self.trajs.loc[self.trajs['agent_id'] == self.agent_ids[idx]]
@@ -56,7 +58,11 @@ class PedestrianDataset(Dataset):
     seq = torch.tensor(np.hstack((xs,ys,vxs,vys))).float()
       
     # Split into input and label
-    return seq[:-1,:], seq[1:,:]
+    if (self.mode == 'train'):
+      return seq[:-1,:], seq[1:,:]
+    elif (self.mode == 'test'):
+      # Return first two segments as input, and all but first two as label
+      return seq[:2,:],seq[2:,:]
 
   
   def __len__(self):
