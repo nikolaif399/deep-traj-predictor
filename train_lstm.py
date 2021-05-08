@@ -24,8 +24,8 @@ def main():
   datapath = "ETH/seq_eth/obsmat.txt"
   
   train_test_split = 0.8
-  train_dataset = PedestrianDataset(mode='train',train_test_split=train_test_split,data_path=datapath)
-  test_dataset = PedestrianDataset(mode='test',train_test_split=train_test_split,data_path=datapath)
+  train_dataset = PedestrianDataset(mode='train',sample_increase=4,train_test_split=train_test_split,data_path=datapath)
+  test_dataset = PedestrianDataset(mode='test',sample_increase=4,train_test_split=train_test_split,data_path=datapath)
   train_loader = DataLoader(dataset=train_dataset, batch_size=16, shuffle=True, collate_fn=PadSequence(), num_workers=12)
   test_loader = DataLoader(dataset=test_dataset, batch_size=16, shuffle=False, collate_fn=PadSequence(), num_workers=12)
 
