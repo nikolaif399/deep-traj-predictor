@@ -89,6 +89,7 @@ class PedestrianDataset(Dataset):
                 vxs2 = np.append(vxs2,vxs2[-1]).reshape(-1,1)
                 vys2 = np.append(vys2,vys2[-1]).reshape(-1,1)
                 
+                """
                 fig,ax = plt.subplots()
                 ax.quiver(xs, ys, vxs, vys, color='r')
                 ax.quiver(xs2, ys2, vxs2, vys2, color='b')
@@ -96,6 +97,7 @@ class PedestrianDataset(Dataset):
                 ax.set_xlabel("X")
                 ax.set_xlabel("Y")
                 plt.show()
+                """
                 
                 xs = xs2
                 ys = ys2
